@@ -1,0 +1,1 @@
+token: kubeadm join 172.31.38.83:6443 --token lwd8kg.fwta0w39lp13xm31     --discovery-token-ca-cert-hash sha256:fcd904d588ef25f8f6e8218b6619b3edff40b133f1fba8ed0b5a3d2930d22971 

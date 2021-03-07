@@ -1,0 +1,18 @@
+#...Security group details
+#
+securityGroupName: 
+securityGroupDescription: 
+vpcId: 
+region: 
+
+#...Node details
+#
+keyName: 
+instanceType: 
+imageId: 
+vpcSubnetId: 
+noOfWNodes: 
+
+#...Inventory location
+#
+inventoryLocation:  

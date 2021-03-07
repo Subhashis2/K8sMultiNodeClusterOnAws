@@ -1,0 +1,66 @@
+- name: "Launching 3 AWS instances for master and worker nodes"
+  hosts: localhost
+  vars_files: 
+    - awsIamKey.yml
+    - instanceDetails.yml
+  tasks:
+    - name: "Installing boto library in base os"
+      pip:
+         name: boto
+         state: present
+    - name: "Making Security group for multi-node cluster"
+      ec2_group:
+         name: "{{ securityGroupName }}"
+         region: "{{ region }}"
+         description: "{{ securityGroupDescription }}"
+         vpc_id: "{{ vpcId }}"
+         state: present
+         aws_access_key: "{{ aws_access_key_id }}"
+         aws_secret_key: "{{ aws_secret_access_key }}"
+         rules:
+            - proto: all
+              cidr_ip: "0.0.0.0/0"
+    - name: "Launching Master node"
+      ec2_instance:
+         name: "Master Node"
+         region: "{{ region }}"
+         key_name: "{{ keyName }}"
+         instance_type: "{{ instanceType }}"
+         image_id: "{{ imageId }}"
+         security_group: "{{ securityGroupName }}"
+         network:
+             assign_public_ip: true
+         vpc_subnet_id: "{{ vpcSubnetId }}"
+         state: present
+         aws_access_key: "{{ aws_access_key_id }}"
+         aws_secret_key: "{{ aws_secret_access_key }}"
+      register: masterIp
+    - name: "Updating the master node's public ip in inventory "
+      lineinfile:
+         path: "{{ inventoryLocation }}"
+         regexp: "masterNode"
+         line: "[masterNode]\n{{ masterIp['instances'][0]['public_ip_address']}} ansible_user=ec2-user ansible_connection=ssh\n"
+
+    - name: "Launching Worker node"
+      ec2_instance:
+         name: "Worker Node - {{ item+1 }}"
+         region: "{{ region }}"
+         key_name: "{{ keyName }}"
+         instance_type: "{{ instanceType }}"
+         image_id: "{{ imageId }}"
+         security_group: "{{ securityGroupName }}"
+         network:
+             assign_public_ip: true
+         vpc_subnet_id: "{{ vpcSubnetId }}"
+         state: present
+         aws_access_key: "{{ aws_access_key_id }}"
+         aws_secret_key: "{{ aws_secret_access_key }}"
+      register: workerIp
+      loop: "{{ range(0, noOfWNodes) }}"
+    - name: "Updating the worker node's public ip in inventory "
+      lineinfile:
+         path: "{{ inventoryLocation }}"
+         regexp: "workerNode"
+         line: "[workerNode]\n{{ workerIp['results'][item]['instances'][0]['public_ip_address']}} ansible_user=ec2-user ansible_connection=ssh"
+      loop: "{{ range(0, noOfWNodes) }}"
+

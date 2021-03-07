@@ -1,0 +1,30 @@
+#...Starting roles
+
+- name: "Configuring master Node"
+  hosts: masterNode
+  roles:
+     - role: MasterNode
+  tasks:
+     - name: "Getting the join command"
+       shell: "kubeadm token  create --print-join-command"
+       register: token
+     - debug:
+          msg: token["stdout"]
+     - add_host:
+          name: "linkToJoin"
+          link: "{{ token['stdout'] }}"     
+
+- name: "Configuring worker Nodes"
+  hosts: workerNode
+  roles:
+     - role: WorkerNode
+  tasks:
+    - name: "Joing with Master Node"
+      shell: "{{ hostvars['linkToJoin']['link'] }}"
+      ignore_errors: yes
+
+- name: "Creating deployment"
+  hosts: masterNode
+  roles:
+     - role: Deployment
+

@@ -1,0 +1,61 @@
+---
+# tasks file for WorkerNode
+- name: "Installing Docker"
+  package:
+     name: docker
+     state: present
+- name: "Starting Docker service"
+  service:
+     name: "docker"
+     state: started
+     enabled: yes
+  notify: docker
+- name: "Configuring 'yum' repo for kubernetes"
+  yum_repository:
+     name: kubernetes
+     description: "Kubernetes"
+     baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64"
+     enabled: yes
+     gpgcheck: yes
+     repo_gpgcheck: yes
+     gpgkey: >-
+         https://packages.cloud.google.com/yum/doc/yum-key.gpg
+         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+     file: kubernetes
+     exclude: "kubelet kubeadm kubectl"
+- name: "Installing kubelet, kubeadm, kubectl"
+  package:
+     name: "{{ item }}"
+     state: present
+     disable_excludes: kubernetes
+  loop:
+     - kubelet
+     - kubeadm
+     - kubectl
+- name:
+  service:
+     name: "kubelet"
+     state: started
+     enabled: yes
+  notify: "kubelet"
+- name: "Copying Cgroup driver in docker 'daemon.json' file"
+  copy:
+      dest: "/etc/docker/daemon.json"
+      src: "daemon.json"
+- name: "Restarting docker service"
+  service:
+      name: "docker"
+      state: restarted
+- name: "Installing iproute-tc"
+  package:
+      name: iproute-tc
+      state: present
+- name: "Making k8s.conf file"
+  copy:
+      src: k8s.conf
+      dest: /etc/k8s.conf
+- name: "Refreshing sysctl"
+  shell: "sysctl --system"
+- shell: "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"
+- name: "Clearing Memory caches"
+  shell: "echo 3 > /proc/sys/vm/drop_caches"

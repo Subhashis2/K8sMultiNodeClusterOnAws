@@ -1,0 +1,67 @@
+---
+# tasks file for MasterNode
+- name: "Installing Docker"
+  package:
+     name: docker
+     state: present
+- name: "Starting Docker service"
+  service:
+     name: "docker"
+     state: started
+     enabled: yes
+  notify: docker
+- name: "Configuring 'yum' repo for kubernetes"
+  yum_repository:
+     name: kubernetes
+     description: "Kubernetes"
+     baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64"
+     enabled: yes
+     gpgcheck: yes
+     repo_gpgcheck: yes
+     gpgkey: >-
+         https://packages.cloud.google.com/yum/doc/yum-key.gpg
+         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+     file: kubernetes
+     exclude: "kubelet kubeadm kubectl"
+- name: "Installing kubelet, kubeadm, kubectl"
+  package:
+     name: "{{ item }}"
+     state: present
+     disable_excludes: kubernetes
+  loop:
+     - kubelet
+     - kubeadm
+     - kubectl
+- name:
+  service:
+     name: "kubelet"
+     state: started
+     enabled: yes
+  notify: "kubelet"
+- name: "Pulling all the required images"
+  command: "kubeadm config images pull"
+- name: "Copying Cgroup driver in docker 'daemon.json' file"
+  copy:
+      dest: "/etc/docker/daemon.json"
+      src: "daemon.json"
+- name: "Restarting docker service"
+  service:
+      name: "docker"
+      state: restarted
+- name: "Installing iproute-tc"
+  package:
+      name: iproute-tc
+      state: present
+- name: "Starting kubeadm service"
+  shell: "kubeadm init --pod-network-cidr=10.240.0.0/16 --ignore-preflight-errors=NumCPU --ignore-preflight-errors=Mem"
+  ignore_errors: yes
+- name: "Making .kube directory"
+  file:
+      path: "$HOME/.kube"
+      state: directory
+- name: "Copying k8s admin.conf file into $HOME/.kube/config"
+  shell: "echo Y | cp -i /etc/kubernetes/admin.conf $HOME/.kube/config"
+- name: "Changing owner of $HOME/.kube/config"
+  shell: "chown $(id -u):$(id -g) $HOME/.kube/config"
+- name: "Clearing Memory caches"
+  shell: "echo 3 > /proc/sys/vm/drop_caches"

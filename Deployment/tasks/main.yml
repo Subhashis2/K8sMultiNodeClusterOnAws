@@ -1,0 +1,21 @@
+---
+# tasks file for Deployment
+
+- name: "Copying deployment YAML file"
+  copy:
+     src: deployment.yml
+     dest: /root/deployment.yml
+- name: "Creating Deployment"
+  shell: "kubectl create -f /root/deployment.yml"
+- name: "Copying service YAML file"
+  copy:
+     src: service.yml
+     dest: /root/service.yml
+- name: "Installing Addons"
+  shell: "kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
+- name: "Creating Service"
+  shell: "kubectl create -f /root/service.yml"
+- name:
+  debug:
+     msg: "Paste this url in your browser: http://{{ item }}:30080"
+  loop: "{{ groups['workerNode'] }}"

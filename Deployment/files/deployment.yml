@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "mydeployment"
+spec:
+  selector:
+      matchLabels:
+         app: web
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: "myc1"
+          image: "subhashis2/httpd:1"
+          ports:
+            - containerPort: 80
+

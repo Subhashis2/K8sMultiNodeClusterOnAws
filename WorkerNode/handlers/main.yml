@@ -1,0 +1,10 @@
+---
+# handlers file for MasterNode
+- name: "docker"
+  service:
+     name: "docker"
+     state: restarted
+- name: "kubelet"
+  service:
+     name: "kubelet"
+     state: restarted
