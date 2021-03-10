@@ -1,5 +1,4 @@
-# K8sMultiNodeClusterOnAws
-# Kubernetes Multi-node cluster using Ansible tools over AWS cloud
+# Kubernetes Multi-node cluster using Ansible roles over AWS cloud
 <img src="https://my-task--bucket.s3.ap-south-1.amazonaws.com/ansible_k8s.jpg" width="500" height="300">
 <h4>Hi, this is </h4><h2><a href="https://www.linkedin.com/in/subhashis-paul/">Subhashis Paul</a></h2>
 
